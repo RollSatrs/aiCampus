@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// model User {
+
+// }
+
+// Таблица преподователей
+model Teacher {
+  id        Int     @id @default(autoincrement())
+  firstName String
+  lastName  String
+  department String?
+  subjects  Subject[]
+  schedules Schedule[]
+}
+// Таблица групп
+model Group {
+  id       Int      @id @default(autoincrement())
+  name     String
+  students Int
+  schedule Schedule[]
+}
+// Таблица предметов
+model Subject {
+  id        Int     @id @default(autoincrement())
+  name      String
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  teacherId Int
+  schedules Schedule[]
+}
+// Таблица аудитории
+model Classroom {
+  id       Int       @id @default(autoincrement())
+  name     String
+  capacity Int
+  schedule Schedule[]
+}
+// Таблица для расписание
+model Schedule {
+  id          Int        @id @default(autoincrement())
+  date        DateTime
+  time        String
+  group       Group      @relation(fields: [groupId], references: [id])
+  groupId     Int
+  subject     Subject    @relation(fields: [subjectId], references: [id])
+  subjectId   Int
+  teacher     Teacher    @relation(fields: [teacherId], references: [id])
+  teacherId   Int
+  classroom   Classroom  @relation(fields: [classroomId], references: [id])
+  classroomId Int
+}
