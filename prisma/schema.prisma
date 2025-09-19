@@ -14,16 +14,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// model User {
+model User {
+  id        Int      @id @default(autoincrement()) // Уникальный ID
+  fullname  String                                 // ФИО пользователя
+  email     String   @unique                       // Email для входа (уникальный)
+  password  String                                 // Пароль (в хэшированном виде)
+  role      Role     @default(STUDENT)             // Роль (студент/преподаватель/админ)
 
-// }
+  // связи
+  teacher   Teacher?   // Связь один-к-одному (если этот user — преподаватель)
+}
 
 // Таблица преподователей
 model Teacher {
   id        Int     @id @default(autoincrement())
-  firstName String
-  lastName  String
-  department String?
+  userId Int @unique
+  department String
+  user User @relation(fields: [userId], references: [id])
   subjects  Subject[]
   schedules Schedule[]
 }
@@ -62,4 +69,11 @@ model Schedule {
   teacherId   Int
   classroom   Classroom  @relation(fields: [classroomId], references: [id])
   classroomId Int
+}
+
+// Перечисление ролей пользователя
+enum Role {
+  STUDENT   // студент
+  TEACHER   // преподаватель
+  ADMIN     // администратор
 }
