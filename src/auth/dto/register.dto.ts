@@ -1,6 +1,7 @@
+import { OmitType } from "@nestjs/mapped-types";
 import { IsEmail, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
-export class RegisterDto{
+export class RegisterDto {
     @IsNotEmpty()
     @IsString()
     fullname: string
@@ -15,9 +16,12 @@ export class RegisterDto{
 
     @IsOptional()
     @IsString()
-    role?:'STUDENT' | 'TEACHER' | 'ADMIN'
+    role?: 'STUDENT' | 'TEACHER' | 'ADMIN'
 
     @IsOptional()
     @IsString()
     departmen?: string
+}
+
+export class RegisterDtoResponse extends OmitType(RegisterDto, ['password']) {
 }
