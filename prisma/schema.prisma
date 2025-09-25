@@ -15,64 +15,89 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement()) // Уникальный ID
-  fullname  String                                 // ФИО пользователя
-  email     String   @unique                       // Email для входа (уникальный)
-  password  String                                 // Пароль (в хэшированном виде)
-  role      Role     @default(STUDENT)             // Роль (студент/преподаватель/админ)
+  id       Int      @id @default(autoincrement()) // Уникальный ID
+  fullname String // ФИО пользователя
+  email    String   @unique // Email для входа (уникальный)
+  password String // Пароль (в хэшированном виде)
+  role     Role     @default(STUDENT) // Роль (студент/преподаватель/админ)
   // связи
-  teacher   Teacher?   // Связь один-к-одному (если этот user — преподаватель)
+  teacher  Teacher? // Связь один-к-одному (если этот user — преподаватель)
+  student  Student?
 }
 
 // Таблица преподователей
 model Teacher {
-  id        Int     @id @default(autoincrement())
-  userId Int @unique
+  id         Int        @id @default(autoincrement())
+  userId     Int        @unique
   department String
-  user User @relation(fields: [userId], references: [id])
-  subjects  Subject[]
-  schedules Schedule[]
+  user       User       @relation(fields: [userId], references: [id])
+  subjects   Subject[]
+  schedules  Schedule[]
+  curatorGroup  Group? @relation("CuratorGroup")
 }
+
+model Student {
+  id         Int     @id @default(autoincrement())
+  userId     Int     @unique
+  user       User    @relation(fields: [userId], references: [id])
+  group      Group   @relation(fields: [groupId], references: [id])
+  groupId   Int
+  department String
+}
+
 // Таблица групп
 model Group {
-  id       Int      @id @default(autoincrement())
-  name     String
-  students Int
-  schedule Schedule[]
+  id            Int        @id @default(autoincrement())
+  name          String
+  student_count Int
+  curatorId     Int?       @unique
+  curator       Teacher?   @relation("CuratorGroup", fields:[curatorId], references: [id])
+  schedule      Schedule[]
+  students     Student[]
 }
+
 // Таблица предметов
 model Subject {
-  id        Int     @id @default(autoincrement())
+  id        Int        @id @default(autoincrement())
   name      String
-  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  teacher   Teacher    @relation(fields: [teacherId], references: [id])
   teacherId Int
   schedules Schedule[]
 }
+
 // Таблица аудитории
 model Classroom {
-  id       Int       @id @default(autoincrement())
+  id       Int           @id @default(autoincrement())
   name     String
   capacity Int
+  type     classroomType
   schedule Schedule[]
 }
+
 // Таблица для расписание
 model Schedule {
-  id          Int        @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   date        DateTime
   time        String
-  group       Group      @relation(fields: [groupId], references: [id])
+  group       Group     @relation(fields: [groupId], references: [id])
   groupId     Int
-  subject     Subject    @relation(fields: [subjectId], references: [id])
+  subject     Subject   @relation(fields: [subjectId], references: [id])
   subjectId   Int
-  teacher     Teacher    @relation(fields: [teacherId], references: [id])
+  teacher     Teacher   @relation(fields: [teacherId], references: [id])
   teacherId   Int
-  classroom   Classroom  @relation(fields: [classroomId], references: [id])
+  classroom   Classroom @relation(fields: [classroomId], references: [id])
   classroomId Int
 }
 
 // Перечисление ролей пользователя
 enum Role {
-  STUDENT   // студент
-  TEACHER   // преподаватель
-  ADMIN     // администратор
+  STUDENT // студент
+  TEACHER // преподаватель
+  ADMIN // администратор
+}
+
+enum classroomType {
+  LECTURE
+  STANDART
+  COMPUTER
 }
