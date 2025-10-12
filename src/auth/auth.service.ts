@@ -1,4 +1,4 @@
-import { Body, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Body, HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/database/db.service';
 import { RegisterDto, RegisterDtoResponse } from './dto/register.dto';
@@ -14,56 +14,73 @@ export class AuthService {
     ) { console.log('AuthService создан') }
 
     async register(dto: RegisterDto) {
-        const existing = await this.prisma.user.findUnique({ where: { email: dto.email } })
+        const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
         if (existing) throw new Error('Пользователь с этим адресом электронной почты уже существует.');
+
         const hashed = await bcrypt.hash(dto.password, 10);
+
+        let user;
         if (dto.role === 'TEACHER') {
-            const user = await this.prisma.user.create({
+            user = await this.prisma.user.create({
                 data: {
                     fullname: dto.fullname,
                     email: dto.email,
                     password: hashed,
                     role: 'TEACHER',
-                    teacher: { create: { department: dto.departmen ?? '' } }
+                    teacher: { create: { department: dto.department ?? '' } }
                 },
                 include: { teacher: true }
-            })
-            return plainToInstance(RegisterDtoResponse, user)
+            });
         }
-        if (dto.role === 'STUDENT') {
-            const user = await this.prisma.user.create({
+        else if (dto.role === 'STUDENT') {
+            user = await this.prisma.user.create({
                 data: {
                     fullname: dto.fullname,
                     email: dto.email,
                     password: hashed,
                     role: 'STUDENT',
-                }
-            })
-            delete (user as any).password
-            return user
+                    student: {
+                        create: { department: dto.department ?? '' }
+                    },
+                },
+                include: { student: true }
+            });
         }
-        if (dto.role === 'ADMIN') {
-            const user = await this.prisma.user.create({
+        else { // ADMIN
+            user = await this.prisma.user.create({
                 data: {
                     fullname: dto.fullname,
                     email: dto.email,
                     password: hashed,
                     role: 'ADMIN',
                 }
-            })
-            delete (user as any).password
-            return user
+            });
         }
+
+
+
+        // создаём JWT
+        const payload = { sub: user.id, email: user.email, role: user.role };
+        const token = await this.jwt.signAsync(payload);
+
+        return {
+            access_token: token
+        };
     }
 
     async login(email: string, password: string) {
+        console.log('login')
         const user = await this.prisma.user.findUnique({ where: { email } })
         if (!user) { throw new UnauthorizedException('Недействительные учетные данные') }
         const match = await bcrypt.compare(password, user.password)
-        if (!match) { throw new UnauthorizedException('Пароль неверный') }
+        if (!match) {
+            throw new HttpException('Неверный email или пароль', HttpStatus.UNAUTHORIZED )
+
+        }
         const payload = { sub: user.id, email: user.email, role: user.role }
         const token = await this.jwt.signAsync(payload)
         return {
+            message: 'Вкод успешный',
             access_token: token,
         }
     }

@@ -20,7 +20,7 @@ export class RegisterDto {
 
     @IsOptional()
     @IsString()
-    departmen?: string
+    department?: string
 }
 
 export class RegisterDtoResponse extends OmitType(RegisterDto, ['password']) {
