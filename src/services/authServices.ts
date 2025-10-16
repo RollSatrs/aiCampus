@@ -16,8 +16,7 @@ export async function loginUser(params: AuthLoginType) {
       const err = await response.json()
       throw new Error(err.message || "Ошибка входа")
     }
-
-    return response.json
+    return await response.json()
 }
 
 export async function RegUser(params:AuthRegisterType) {

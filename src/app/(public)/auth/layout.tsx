@@ -1,7 +1,4 @@
 import { PropsWithChildren } from "react";
-import { LineOr } from "./components/LineOr";
-import { RoleButtons } from "./components/RoleButtons";
-import { LoadingTest } from "./components/LoadingTest";
 import Wrapper from "./components/Wrapper";
 
 export default function AuthLayout({children}: PropsWithChildren<unknown>){

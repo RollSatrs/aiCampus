@@ -6,11 +6,14 @@ import Link  from "next/link";
 import { useState } from "react";
 import { discription } from "../const/Description";
 import { loginUser } from "@/services/authServices";
-
+import Cookies from "js-cookie"
+import { useRouter } from "next/navigation";
+import { jwtDecode } from "jwt-decode";
+import { TokenPayload } from "@/type/auth.interface";
 
 
 export default function AuthForm() {
-
+    const router =  useRouter()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError]= useState<string | null>(null)
@@ -27,8 +30,13 @@ export default function AuthForm() {
                 return;
             }
             const data = await loginUser({email, password})
-            console.log('Успешный вход', data)
-
+            console.log(data)
+            const token = data.access_token
+            Cookies.set('accessToken', data.access_token, {expires:7})
+            const decoded = jwtDecode<TokenPayload>(token)
+            const  userId = String(decoded.sub)
+            console.log('Декодер', decoded.sub, userId)
+            router.push(`/profile/${userId}`)
         }catch(err:any){
             setError(err.message)
         }finally{

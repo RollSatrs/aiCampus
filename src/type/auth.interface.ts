@@ -12,3 +12,9 @@ export interface AuthRegisterType{
     role: RoleType
     department?: string
 }
+
+export interface TokenPayload {
+    sub: number
+    email: string
+    role: RoleType
+}
